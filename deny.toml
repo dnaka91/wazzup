@@ -1,0 +1,16 @@
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+]
+
+[licenses]
+allow-osi-fsf-free = "both"
+exceptions = [
+    { allow = ["AGPL-3.0"], name = "wazzup" },
+    { allow = ["Unicode-DFS-2016"], name = "unicode-ident" },
+]
+
+[bans]
+skip = [
+    { name = "base64", version = "=0.13.1" },
+    { name = "toml", version = "=0.5.11" },
+]
