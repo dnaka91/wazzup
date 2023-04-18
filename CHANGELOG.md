@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2023-04-18
+
+### Bug Fixes
+
+- Use same file walk settings for minify step
+- Ignore .git folders in the file watcher
+
+### Features
+
+- Build WASM binary as last step
+- Minify HTML and JS files
+
+### Miscellaneous Tasks
+
+- Update dependencies
+
+### Refactor
+
+- Run wasm-opt as part of minify
+
+[0.2.0]: https://github.com/dnaka91/wazzup/compare/v0.1.0...v0.2.0
+
 ## [0.1.0] - 2023-02-11
 
 ### Miscellaneous Tasks
