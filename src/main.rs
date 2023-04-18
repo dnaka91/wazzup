@@ -90,12 +90,12 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
 
     build::index(&project, &name, args.release, dev)?;
     info!("built index.html");
-    build::rust(&project, &name, args.release, &args.profile)?;
-    info!("built WASM files");
     build::sass(&project, args.release)?;
     info!("built stylesheets");
     build::assets(&project)?;
     info!("built assets");
+    build::rust(&project, &name, args.release, &args.profile)?;
+    info!("built WASM files");
 
     Ok(())
 }
