@@ -94,20 +94,24 @@ fn find_files(
     root: impl AsRef<Path>,
     extension: &'_ str,
 ) -> impl Iterator<Item = Result<(DirEntry, Metadata)>> + '_ {
-    let walk = WalkBuilder::new(root).standard_filters(false).build();
+    WalkBuilder::new(root)
+        .standard_filters(false)
+        .require_git(false)
+        .git_ignore(true)
+        .parents(true)
+        .build()
+        .filter_map(move |entry| {
+            let info = || {
+                let entry = entry?;
+                let metadata = entry.metadata()?;
 
-    walk.into_iter().filter_map(move |entry| {
-        let info = || {
-            let entry = entry?;
-            let metadata = entry.metadata()?;
+                if metadata.is_dir() || entry.path().extension().unwrap_or_default() != extension {
+                    return Ok(None);
+                }
 
-            if metadata.is_dir() || entry.path().extension().unwrap_or_default() != extension {
-                return Ok(None);
-            }
+                Ok(Some((entry, metadata)))
+            };
 
-            Ok(Some((entry, metadata)))
-        };
-
-        info().transpose()
-    })
+            info().transpose()
+        })
 }
