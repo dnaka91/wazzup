@@ -1,9 +1,13 @@
 //! Data structures for command line arguments parsing logic for them.
 
-use std::{path::{Path, PathBuf}, fs::OpenOptions, io::{self, Write}};
+use std::{
+    fs::OpenOptions,
+    io::{self, Write},
+    path::{Path, PathBuf},
+};
 
-use clap::{ArgAction, Args, Parser, Subcommand,ValueHint, CommandFactory};
-use anyhow::{Result, Context, ensure};
+use anyhow::{ensure, Context, Result};
+use clap::{ArgAction, Args, CommandFactory, Parser, Subcommand, ValueHint};
 use clap_complete::Shell;
 
 #[derive(Debug, Parser)]
@@ -87,7 +91,7 @@ impl Default for DevArgs {
 }
 
 /// Generate shell completions, written to the standard output.
-pub fn completions(shell: Shell) ->Result<()>{
+pub fn completions(shell: Shell) -> Result<()> {
     clap_complete::generate(
         shell,
         &mut Cli::command(),

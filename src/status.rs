@@ -7,9 +7,12 @@ use std::{
 
 use anyhow::Result;
 use tabled::{
-    object::Rows,
-    style::{HorizontalLine, Line},
-    Alignment, ModifyObject, Panel, Style, Table, Tabled,
+    settings::{
+        object::Rows,
+        style::{HorizontalLine, Line},
+        Alignment, Modify, Panel, Style,
+    },
+    Table, Tabled,
 };
 use yansi::{Color, Paint};
 
@@ -45,13 +48,13 @@ pub fn status(project: &Path) -> Result<()> {
 /// Print out the table data, with an additional header above it, and nice border formatting.
 fn print_table(header: &str, values: impl IntoIterator<Item = impl Tabled>) {
     let table = Table::new(values)
-        .with(Style::modern().off_horizontal().horizontals([
+        .with(Style::modern().remove_horizontal().horizontals([
             HorizontalLine::new(0, Line::full('─', '─', '┌', '┐')),
             HorizontalLine::new(1, Line::full('─', '┬', '├', '┤')),
             HorizontalLine::new(2, Line::full('─', '┼', '├', '┤')),
         ]))
         .with(Panel::header(Paint::new(header).bold().to_string()))
-        .with(Rows::first().modify().with(Alignment::center()))
+        .with(Modify::new(Rows::first()).with(Alignment::center()))
         .to_string();
 
     println!("{table}");

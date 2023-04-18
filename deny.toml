@@ -13,4 +13,5 @@ exceptions = [
 skip = [
     { name = "base64", version = "=0.13.1" },
     { name = "toml", version = "=0.5.11" },
+    { name = "syn", version = "=1.0.109" },
 ]
