@@ -14,6 +14,7 @@ use self::{
 
 mod build;
 mod cli;
+mod minify;
 mod server;
 mod status;
 mod tools;
@@ -96,6 +97,13 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     info!("built assets");
     build::rust(&project, &name, args.release, &args.profile)?;
     info!("built WASM files");
+
+    if !dev {
+        let reduction = minify::html(&project)?;
+        info!(%reduction, "minified HTML files");
+        let reduction = minify::js(&project)?;
+        info!(%reduction, "minified JavaScript files");
+    }
 
     Ok(())
 }
