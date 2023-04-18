@@ -1,10 +1,13 @@
 use std::{
     fmt::{self, Display},
+    fs::{self, Metadata},
     path::Path,
 };
 
 use anyhow::{anyhow, Result};
-use ignore::WalkBuilder;
+use ignore::{DirEntry, WalkBuilder};
+
+use crate::tools::WasmOpt;
 
 #[derive(Default)]
 pub struct Reduction {
@@ -25,10 +28,6 @@ impl Display for Reduction {
 }
 
 pub fn html(project: &Path) -> Result<Reduction> {
-    let walk = WalkBuilder::new(project.join("dist"))
-        .standard_filters(false)
-        .build();
-
     let cfg = minify_html::Cfg {
         do_not_minify_doctype: true,
         minify_css: true,
@@ -38,42 +37,28 @@ pub fn html(project: &Path) -> Result<Reduction> {
 
     let mut reduction = Reduction::default();
 
-    for entry in walk {
-        let entry = entry?;
-        let metadata = entry.metadata()?;
+    for file in find_files(project.join("dist"), "html") {
+        let (entry, _) = file?;
 
-        if metadata.is_dir() || entry.path().extension().unwrap_or_default() != "html" {
-            continue;
-        }
-
-        let original = std::fs::read(entry.path())?;
+        let original = fs::read(entry.path())?;
         let minified = minify_html::minify(&original, &cfg);
 
         reduction.original += original.len();
         reduction.minified += minified.len();
 
-        std::fs::write(entry.into_path(), minified)?;
+        fs::write(entry.into_path(), minified)?;
     }
 
     Ok(reduction)
 }
 
 pub fn js(project: &Path) -> Result<Reduction> {
-    let walk = WalkBuilder::new(project.join("dist"))
-        .standard_filters(false)
-        .build();
-
     let mut reduction = Reduction::default();
 
-    for entry in walk {
-        let entry = entry?;
-        let metadata = entry.metadata()?;
+    for file in find_files(project.join("dist"), "js") {
+        let (entry, _) = file?;
 
-        if metadata.is_dir() || entry.path().extension().unwrap_or_default() != "js" {
-            continue;
-        }
-
-        let original = std::fs::read(entry.path())?;
+        let original = fs::read(entry.path())?;
         let mut minified = Vec::with_capacity(original.len());
 
         reduction.original += original.len();
@@ -83,8 +68,46 @@ pub fn js(project: &Path) -> Result<Reduction> {
 
         reduction.minified += minified.len();
 
-        std::fs::write(entry.into_path(), minified)?;
+        fs::write(entry.into_path(), minified)?;
     }
 
     Ok(reduction)
+}
+
+pub fn wasm(project: &Path) -> Result<Reduction> {
+    let mut reduction = Reduction::default();
+
+    for file in find_files(project.join("dist"), "wasm") {
+        let (entry, metadata) = file?;
+
+        reduction.original += metadata.len() as usize;
+
+        WasmOpt::run(entry.path())?;
+
+        reduction.minified += entry.metadata()?.len() as usize;
+    }
+
+    Ok(reduction)
+}
+
+fn find_files(
+    root: impl AsRef<Path>,
+    extension: &'_ str,
+) -> impl Iterator<Item = Result<(DirEntry, Metadata)>> + '_ {
+    let walk = WalkBuilder::new(root).standard_filters(false).build();
+
+    walk.into_iter().filter_map(move |entry| {
+        let info = || {
+            let entry = entry?;
+            let metadata = entry.metadata()?;
+
+            if metadata.is_dir() || entry.path().extension().unwrap_or_default() != extension {
+                return Ok(None);
+            }
+
+            Ok(Some((entry, metadata)))
+        };
+
+        info().transpose()
+    })
 }

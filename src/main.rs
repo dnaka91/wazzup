@@ -98,11 +98,13 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     build::rust(&project, &name, args.release, &args.profile)?;
     info!("built WASM files");
 
-    if !dev {
+    if args.release {
         let reduction = minify::html(&project)?;
         info!(%reduction, "minified HTML files");
         let reduction = minify::js(&project)?;
         info!(%reduction, "minified JavaScript files");
+        let reduction = minify::wasm(&project)?;
+        info!(%reduction, "minified WASM files");
     }
 
     Ok(())

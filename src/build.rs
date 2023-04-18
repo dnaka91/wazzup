@@ -6,7 +6,7 @@ use std::{
     path::Path,
 };
 
-use crate::tools::{Cargo, Sass, WasmBindgen, WasmOpt};
+use crate::tools::{Cargo, Sass, WasmBindgen};
 
 pub fn index(project: &Path, app_name: &str, release: bool, dev: bool) -> Result<()> {
     let index = load_index(project)?;
@@ -95,11 +95,6 @@ pub fn rust(project: &Path, app_name: &str, release: bool, profile: &str) -> Res
         )),
         &project.join("dist"),
     )?;
-
-    // only run `wasm-opt` in release mode
-    if release {
-        WasmOpt::run(&project.join(format!("dist/{app_name}_bg.wasm")))?;
-    }
 
     Ok(())
 }
