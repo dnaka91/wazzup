@@ -6,7 +6,7 @@ use std::{
     path::Path,
 };
 
-use crate::tools::{Cargo, Sass, WasmBindgen};
+use crate::tools::{Cargo, Sass, Tailwind, WasmBindgen};
 
 pub fn index(project: &Path, app_name: &str, release: bool, dev: bool) -> Result<()> {
     let index = load_index(project)?;
@@ -115,6 +115,14 @@ pub fn sass(project: &Path, release: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn tailwind(project: &Path, release: bool) -> Result<()> {
+    Tailwind::run(
+        &project.join("assets/main.css"),
+        &project.join("dist/main.css"),
+        release,
+    )
 }
 
 pub fn assets(project: &Path) -> Result<()> {

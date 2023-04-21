@@ -37,7 +37,7 @@ pub enum ChangeType {
     /// The `index.html` file.
     Html,
     /// Main SASS/SCSS/CSS file or any file referenced by it.
-    Sass,
+    Css,
     /// Static files that are not SASS/SCSS/CSS files. Therefore, copied as-is without any
     /// processing.
     Static(PathBuf),
@@ -49,7 +49,7 @@ impl Display for ChangeType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Html => f.write_str("html"),
-            Self::Sass => f.write_str("sass"),
+            Self::Css => f.write_str("css"),
             Self::Static(path) => write!(f, "static:{}", path.display()),
             Self::Rust => f.write_str("rust"),
         }

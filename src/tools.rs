@@ -324,6 +324,42 @@ impl Sass {
     }
 }
 
+/// Wrapper around [tailwind](https://github.com/tailwindlabs/tailwindcss), to generate
+/// `TailwindCSS` stylesheets based on the project source files.
+pub struct Tailwind {}
+
+impl Tailwind {
+    fn bin_path() -> Result<&'static Path> {
+        static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
+
+        BIN_PATH
+            .get_or_try_init(|| which::which("tailwind").map_err(Into::into))
+            .map(|path| path.as_path())
+    }
+
+    pub fn run(target: &Path, out: &Path, release: bool) -> Result<()> {
+        let mut cmd = Command::new(Self::bin_path()?);
+
+        cmd.arg("--input").arg(target);
+        cmd.arg("--output").arg(out);
+
+        if release {
+            cmd.arg("--minify");
+        }
+
+        let output = cmd.output()?;
+
+        if !output.status.success() {
+            bail!(
+                "failed running tailwind: {}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

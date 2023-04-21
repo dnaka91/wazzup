@@ -120,7 +120,7 @@ impl ProjectWatcher {
             || path.starts_with("assets/scss/")
             || path.starts_with("assets/css/")
         {
-            ChangeType::Sass
+            ChangeType::Css
         } else if path.starts_with(Path::new("assets/")) {
             ChangeType::Static(full_path)
         } else {

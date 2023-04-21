@@ -1,10 +1,17 @@
-use std::{fs, path::Path, thread, time::Duration};
+use std::{
+    fmt::{self, Display},
+    fs,
+    io::ErrorKind,
+    path::Path,
+    thread,
+    time::Duration,
+};
 
 use crate::{cli::Cli, tools::Rustup};
 use anyhow::Result;
 use flume::Selector;
 use serde::Deserialize;
-use tracing::{error, info, Level};
+use tracing::{debug, error, info, Level};
 use tracing_subscriber::{filter::Targets, prelude::*};
 
 use self::{
@@ -76,6 +83,34 @@ fn package_name(project: &Path) -> Result<String> {
         .map(|toml| toml.package.name)
 }
 
+/// The CSS framework that is used by the project. This decides what tools are run when building
+/// all components of the project.
+#[derive(Clone, Copy, Eq, PartialEq)]
+enum CssMode {
+    /// The [SASS/SCSS](https://sass-lang.com) framework.
+    Sass,
+    /// The [TailwindCSS](https://tailwindcss.com) framework.
+    Tailwind,
+}
+
+impl Display for CssMode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(match self {
+            CssMode::Sass => "sass",
+            CssMode::Tailwind => "tailwind",
+        })
+    }
+}
+
+// Detect which CSS framework is used.
+fn css_mode(project: &Path) -> Result<CssMode> {
+    match fs::metadata(project.join("tailwind.config.js")) {
+        Ok(_) => Ok(CssMode::Tailwind),
+        Err(e) if e.kind() == ErrorKind::NotFound => Ok(CssMode::Sass),
+        Err(e) => Err(e.into()),
+    }
+}
+
 /// Fully build the project from scratch.
 fn build(args: BuildArgs, dev: bool) -> Result<()> {
     let project = std::env::current_dir()?;
@@ -88,13 +123,20 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     fs::create_dir(&out)?;
 
     let name = package_name(&project)?;
+    let css_mode = css_mode(&project)?;
 
     build::index(&project, &name, args.release, dev)?;
     info!("built index.html");
-    build::sass(&project, args.release)?;
-    info!("built stylesheets");
+
+    match css_mode {
+        CssMode::Sass => build::sass(&project, args.release)?,
+        CssMode::Tailwind => build::tailwind(&project, args.release)?,
+    }
+    info!(mode = %css_mode, "built stylesheets");
+
     build::assets(&project)?;
     info!("built assets");
+
     build::rust(&project, &name, args.release, &args.profile)?;
     info!("built WASM files");
 
@@ -116,11 +158,12 @@ fn dev(args: DevArgs) -> Result<()> {
 
     let project = std::env::current_dir()?;
     let name = package_name(&project)?;
+    let css_mode = css_mode(&project)?;
 
     let watcher = watch::watch(project.clone())?;
     let debouncer = watch::debounce(watcher, Duration::from_secs(2))?;
     let (shutdown_tx, shutdown_rx) = flume::bounded(0);
-    let (rebuild_tx, rebuild_rx) = flume::bounded(0);
+    let (reload_tx, reload_rx) = flume::bounded(0);
 
     let thread = thread::spawn({
         let project = project.clone();
@@ -132,12 +175,13 @@ fn dev(args: DevArgs) -> Result<()> {
                 .wait();
 
             if let Some(change) = res {
-                if let Err(e) = rebuild(&project, &name, change) {
+                if let Err(e) = rebuild(&project, &name, css_mode, change) {
                     error!(error = %e, "failed rebuilding");
                     continue;
                 }
 
-                rebuild_tx.send(()).ok();
+                reload_tx.send(()).ok();
+                debug!("sent reload signal");
             } else {
                 debouncer.shutdown().shutdown();
                 break;
@@ -145,7 +189,7 @@ fn dev(args: DevArgs) -> Result<()> {
         }
     });
 
-    let res = server::run(project, args.port, rebuild_rx);
+    let res = server::run(project, args.port, reload_rx);
 
     shutdown_tx.send(()).ok();
     thread.join().expect("thread to shut down properly");
@@ -156,15 +200,29 @@ fn dev(args: DevArgs) -> Result<()> {
 /// Rebuild parts of the application, based on the kind of source files that changed. For example,
 /// only rebuild the WASM binary if Rust code changed or only the stylesheets if any sass/scss/css
 /// files changed.
-fn rebuild(project: &Path, name: &str, change: ChangeType) -> Result<()> {
+fn rebuild(project: &Path, name: &str, css_mode: CssMode, change: ChangeType) -> Result<()> {
+    // Tailwind scans project files to detect what CSS classes are used. Therefore, we have to run
+    // it not just when CSS files changed, but when HTML or Rust files changed as well.
+    if css_mode == CssMode::Tailwind
+        && matches!(
+            change,
+            ChangeType::Html | ChangeType::Css | ChangeType::Rust
+        )
+    {
+        build::tailwind(project, false)?;
+        info!(mode = %css_mode, "rebuilt stylesheets");
+    }
+
     match change {
         ChangeType::Html => {
             build::index(project, name, false, true)?;
             info!("rebuilt index.html");
         }
-        ChangeType::Sass => {
-            build::sass(project, false)?;
-            info!("rebuilt stylesheets");
+        ChangeType::Css => {
+            if css_mode == CssMode::Sass {
+                build::sass(project, false)?;
+                info!(mode = %css_mode, "rebuilt stylesheets");
+            }
         }
         ChangeType::Static(asset) => {
             build::asset(project, asset.strip_prefix(project)?)?;
