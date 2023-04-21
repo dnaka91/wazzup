@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2023-04-21
+
+### Features
+
+- Support projects inside a workspace
+- Add support for TailwindCSS
+
+### Miscellaneous Tasks
+
+- Update `minify-js` to v0.5
+
+[0.3.0]: https://github.com/dnaka91/wazzup/compare/v0.2.0...v0.3.0
+
 ## [0.2.0] - 2023-04-18
 
 ### Bug Fixes

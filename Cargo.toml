@@ -1,6 +1,6 @@
 [package]
 name = "wazzup"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 license = "AGPL-3.0-only"
 description = "Very opinionated Rust WASM project builder"
@@ -8,9 +8,9 @@ authors = ["Dominik Nakamura <dnaka91@gmail.com>"]
 
 [dependencies]
 anyhow = "1.0.70"
-axum = { version = "0.6.15", features = ["http2", "ws"] }
+axum = { version = "0.6.16", features = ["http2", "ws"] }
 cargo-lock = "8.0.3"
-clap = { version = "4.2.2", features = ["derive"] }
+clap = { version = "4.2.4", features = ["derive"] }
 clap_complete = "4.2.0"
 clap_mangen = "0.2.10"
 directories = "5.0.0"
