@@ -10,6 +10,7 @@ use anyhow::{bail, Context, Result};
 use cargo_lock::Lockfile;
 use directories::ProjectDirs;
 use once_cell::sync::OnceCell;
+use serde::Deserialize;
 
 /// Wrapper around [rustup](https://rustup.rs/), to manage toolchain and target installations.
 pub struct Rustup {}
@@ -60,7 +61,13 @@ impl Rustup {
 
 /// Wrapper around [cargo](https://doc.rust-lang.org/cargo), to compile the Rust code into WASM
 /// binaries.
-pub struct Cargo {}
+pub struct Cargo {
+    /// Location of the workspace root, which can be the project path itself if it's at the top.
+    workspace_dir: PathBuf,
+    /// Location of the `target` directly usually located at the workspace root. May be changed by
+    /// user configuration.
+    target_dir: PathBuf,
+}
 
 impl Cargo {
     const WASM_TARGET: &str = "wasm32-unknown-unknown";
@@ -73,7 +80,38 @@ impl Cargo {
             .map(|path| path.as_path())
     }
 
-    pub fn run(working_dir: &Path, release: bool, profile: &str) -> Result<()> {
+    /// Create a new instance for the given project. This will directly locate the workspace root
+    /// and target directory for later use.
+    pub fn new(working_dir: &Path) -> Result<Self> {
+        #[derive(Deserialize)]
+        struct Metadata {
+            target_directory: PathBuf,
+            workspace_root: PathBuf,
+        }
+
+        let mut cmd = Command::new(Self::bin_path()?);
+        cmd.current_dir(working_dir);
+        cmd.args(["metadata", "--format-version", "1"]);
+
+        let output = cmd.output()?;
+
+        if !output.status.success() {
+            bail!(
+                "failed running cargo:\n{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+        }
+
+        let meta = serde_json::from_slice::<Metadata>(&output.stdout)
+            .context("failed parsing Cargo metadata")?;
+
+        Ok(Self {
+            workspace_dir: meta.workspace_root,
+            target_dir: meta.target_directory,
+        })
+    }
+
+    pub fn run(&self, working_dir: &Path, release: bool, profile: &str) -> Result<()> {
         let mut cmd = Command::new(Self::bin_path()?);
         cmd.current_dir(working_dir);
         cmd.args([
@@ -83,8 +121,8 @@ impl Cargo {
             "--target",
             Self::WASM_TARGET,
             "--target-dir",
-            "target/wazzup",
         ]);
+        cmd.arg(self.target_dir.join("wazzup"));
 
         if release {
             cmd.args(["--profile", profile]);
@@ -100,6 +138,17 @@ impl Cargo {
         }
 
         Ok(())
+    }
+
+    /// Get the directory of the workspace root, which is where most mandatory files are located
+    /// (like the `Cargo.lock`).
+    pub fn workspace_dir(&self) -> &Path {
+        &self.workspace_dir
+    }
+
+    /// Output directory for compilation artifacts.
+    pub fn target_dir(&self) -> &Path {
+        &self.target_dir
     }
 }
 
@@ -305,7 +354,7 @@ mod tests {
             .status;
         assert!(status.success());
 
-        Cargo::run(&project, false, "release")?;
+        Cargo::new(&project)?.run(&project, false, "release")?;
 
         let bindgen = WasmBindgen::new(WasmBindgen::find_version(project.join("Cargo.lock"))?)?;
         if !bindgen.installed() {

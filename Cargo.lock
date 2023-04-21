@@ -2036,6 +2036,7 @@ dependencies = [
  "once_cell",
  "semver",
  "serde",
+ "serde_json",
  "tabled",
  "tempfile",
  "tokio",

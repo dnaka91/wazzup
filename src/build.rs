@@ -81,16 +81,20 @@ fn transform_index(
 }
 
 pub fn rust(project: &Path, app_name: &str, release: bool, profile: &str) -> Result<()> {
-    Cargo::run(project, release, profile)?;
+    let cargo = Cargo::new(project)?;
 
-    let bindgen = WasmBindgen::new(WasmBindgen::find_version(project.join("Cargo.lock"))?)?;
+    cargo.run(project, release, profile)?;
+
+    let bindgen = WasmBindgen::new(WasmBindgen::find_version(
+        cargo.workspace_dir().join("Cargo.lock"),
+    )?)?;
     if !bindgen.installed() {
         bindgen.install()?;
     }
 
     bindgen.run(
-        &project.join(format!(
-            "target/wazzup/wasm32-unknown-unknown/{profile}/{app_name}.wasm",
+        &cargo.target_dir().join(format!(
+            "wazzup/wasm32-unknown-unknown/{profile}/{app_name}.wasm",
             profile = if release { profile } else { "debug" },
         )),
         &project.join("dist"),
