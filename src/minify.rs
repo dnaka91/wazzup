@@ -54,6 +54,7 @@ pub fn html(project: &Path) -> Result<Reduction> {
 
 pub fn js(project: &Path) -> Result<Reduction> {
     let mut reduction = Reduction::default();
+    let mut session = minify_js::Session::new();
 
     for file in find_files(project.join("dist"), "js") {
         let (entry, _) = file?;
@@ -63,8 +64,14 @@ pub fn js(project: &Path) -> Result<Reduction> {
 
         reduction.original += original.len();
 
-        minify_js::minify(minify_js::TopLevelMode::Module, original, &mut minified)
-            .map_err(|e| anyhow!("failed minifying JavaScript: {e}"))?;
+        session.reset();
+        minify_js::minify(
+            &session,
+            minify_js::TopLevelMode::Module,
+            &original,
+            &mut minified,
+        )
+        .map_err(|e| anyhow!("failed minifying JavaScript: {e}"))?;
 
         reduction.minified += minified.len();
 

@@ -12,6 +12,9 @@ exceptions = [
 [bans]
 skip = [
     { name = "base64", version = "=0.13.1" },
-    { name = "toml", version = "=0.5.11" },
+    { name = "hashbrown", version = "=0.12.3" },
+    { name = "minify-js", version = "=0.4.3" },
+    { name = "parse-js", version = "=0.10.3" },
     { name = "syn", version = "=1.0.109" },
+    { name = "toml", version = "=0.5.11" },
 ]
