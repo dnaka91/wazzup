@@ -219,7 +219,10 @@ pub fn watch(project: PathBuf) -> Result<Handle> {
 
     for entry in walker {
         let entry = entry?;
-        trace!(path = %entry.path().display(), "added watch path");
+        let path = entry.path().strip_prefix(&project).unwrap_or(entry.path());
+
+        trace!(path = %path.display(), "added watch path");
+
         watcher.watch(entry.path(), RecursiveMode::NonRecursive)?;
     }
 
