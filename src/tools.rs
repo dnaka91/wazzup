@@ -22,7 +22,7 @@ impl Rustup {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
 
         BIN_PATH
-            .get_or_try_init(|| which::which("rustup").map_err(Into::into))
+            .get_or_try_init(|| find_bin("rustup"))
             .map(|path| path.as_path())
     }
 
@@ -76,7 +76,7 @@ impl Cargo {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
 
         BIN_PATH
-            .get_or_try_init(|| which::which("cargo").map_err(Into::into))
+            .get_or_try_init(|| find_bin("cargo"))
             .map(|path| path.as_path())
     }
 
@@ -270,7 +270,7 @@ impl WasmOpt {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
 
         BIN_PATH
-            .get_or_try_init(|| which::which("wasm-opt").map_err(Into::into))
+            .get_or_try_init(|| find_bin("wasm-opt"))
             .map(|path| path.as_path())
     }
 
@@ -300,7 +300,7 @@ impl Sass {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
 
         BIN_PATH
-            .get_or_try_init(|| which::which("sass").map_err(Into::into))
+            .get_or_try_init(|| find_bin("sass"))
             .map(|path| path.as_path())
     }
 
@@ -333,7 +333,7 @@ impl Tailwind {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
 
         BIN_PATH
-            .get_or_try_init(|| which::which("tailwind").map_err(Into::into))
+            .get_or_try_init(|| find_bin("tailwindcss"))
             .map(|path| path.as_path())
     }
 
@@ -358,6 +358,15 @@ impl Tailwind {
 
         Ok(())
     }
+}
+
+fn find_bin(name: &str) -> Result<PathBuf> {
+    which::which("tailwindcss").with_context(|| {
+        format!(
+            "missing `{name}` binary, try to install it through your OS package manager and make \
+             sure it's available through the PATH env variable"
+        )
+    })
 }
 
 #[cfg(test)]
