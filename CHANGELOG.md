@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2023-06-07
+
+### Features
+
+- Give better error messages for missing binaries
+- Log the watched file paths in verbose mode
+
+### Miscellaneous Tasks
+
+- Update dependencies
+- Adjust rustfmt code formatting settings
+- Update dependencies
+
+[0.3.1]: https://github.com/dnaka91/wazzup/compare/v0.3.0...v0.3.1
+
 ## [0.3.0] - 2023-04-21
 
 ### Features
