@@ -361,7 +361,7 @@ impl Tailwind {
 }
 
 fn find_bin(name: &str) -> Result<PathBuf> {
-    which::which("tailwindcss").with_context(|| {
+    which::which(name).with_context(|| {
         format!(
             "missing `{name}` binary, try to install it through your OS package manager and make \
              sure it's available through the PATH env variable"
