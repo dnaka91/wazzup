@@ -7,7 +7,6 @@ use std::{
     time::Duration,
 };
 
-use crate::{cli::Cli, tools::Rustup};
 use anyhow::Result;
 use flume::Selector;
 use serde::Deserialize;
@@ -18,6 +17,7 @@ use self::{
     cli::{BuildArgs, Command, DevArgs},
     watch::ChangeType,
 };
+use crate::{cli::Cli, tools::Rustup};
 
 mod build;
 mod cli;

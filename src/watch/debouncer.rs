@@ -8,15 +8,17 @@
 //! passed a time threshold from the point they were received until now. These are taken out of the
 //! map and send over a channel to the receiver.
 
-use super::{watcher, ChangeType};
-use anyhow::Result;
-use flume::Selector;
 use std::{
     collections::{HashMap, HashSet},
     thread,
     time::{Duration, Instant},
 };
+
+use anyhow::Result;
+use flume::Selector;
 use tracing::{debug, trace};
+
+use super::{watcher, ChangeType};
 
 struct EventDebouncer {
     handle: watcher::Handle,

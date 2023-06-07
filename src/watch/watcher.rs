@@ -261,9 +261,11 @@ pub fn watch(project: PathBuf) -> Result<Handle> {
 
 #[cfg(all(test, target_os = "linux"))]
 mod tests {
-    use super::*;
-    use assert_fs::prelude::*;
     use std::{env, fs};
+
+    use assert_fs::prelude::*;
+
+    use super::*;
 
     #[test]
     fn create_watcher() -> Result<()> {

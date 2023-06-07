@@ -1,10 +1,11 @@
-use anyhow::{Context, Result};
-use ignore::WalkBuilder;
 use std::{
     fs::{self, File},
     io::{BufWriter, ErrorKind, Write},
     path::Path,
 };
+
+use anyhow::{Context, Result};
+use ignore::WalkBuilder;
 
 use crate::tools::{Cargo, Sass, Tailwind, WasmBindgen};
 
