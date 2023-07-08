@@ -5,6 +5,7 @@ edition = "2021"
 license = "AGPL-3.0-only"
 description = "Very opinionated Rust WASM project builder"
 authors = ["Dominik Nakamura <dnaka91@gmail.com>"]
+include = ["src/**/*", "CHANGELOG.md", "LICENSE", "README.md"]
 
 [dependencies]
 anyhow = "1.0.71"
