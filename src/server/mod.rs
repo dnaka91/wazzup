@@ -26,8 +26,12 @@ pub fn run(base: PathBuf, port: u16, rebuild: flume::Receiver<()>) -> Result<()>
             let (tx, rx) = watch::channel(());
             tokio::spawn(async move {
                 loop {
-                    rebuild.recv_async().await.ok();
-                    tx.send(()).ok();
+                    if rebuild.recv_async().await.is_err() {
+                        break;
+                    }
+                    if tx.send(()).is_err() {
+                        break;
+                    }
                 }
             });
 
@@ -35,9 +39,16 @@ pub fn run(base: PathBuf, port: u16, rebuild: flume::Receiver<()>) -> Result<()>
         })
 }
 
+#[derive(Clone)]
+struct AppState {
+    shutdown: Shutdown,
+    reload: watch::Receiver<()>,
+}
+
 async fn run_server(base: PathBuf, port: u16, notifier: watch::Receiver<()>) -> Result<()> {
     let index = ServeFile::new(base.join("dist/index.html"));
     let dist = ServeDir::new(base.join("dist"));
+    let shutdown = Shutdown::new()?;
 
     let app = Router::new()
         .fallback_service(
@@ -46,9 +57,10 @@ async fn run_server(base: PathBuf, port: u16, notifier: watch::Receiver<()>) -> 
         )
         .route("/__WAZZUP__/reload.js", get(reload_js))
         .route("/__WAZZUP__/reload", get(reload_ws))
-        .with_state(notifier);
-
-    let shutdown = Shutdown::new()?;
+        .with_state(AppState {
+            shutdown: shutdown.clone(),
+            reload: notifier,
+        });
 
     // Always run on localhost only. It's a bad idea to publicly expose this server,
     // due to only doing the basics in terms of security.
@@ -74,18 +86,24 @@ async fn reload_js() -> impl IntoResponse {
 /// needed.
 async fn reload_ws(
     ws: WebSocketUpgrade,
-    State(mut notifier): State<watch::Receiver<()>>,
+    State(AppState {
+        shutdown,
+        mut reload,
+    }): State<AppState>,
 ) -> Response {
-    notifier.borrow_and_update();
-    ws.on_upgrade(|socket| ws_notify(socket, notifier))
+    reload.borrow_and_update();
+    ws.on_upgrade(|socket| ws_notify(socket, shutdown, reload))
 }
 
 /// Notification logic, that listens for rebuilds on any components (triggered due to file changes)
 /// and then notifies the frontend to reload.
-async fn ws_notify(mut socket: WebSocket, mut notifier: watch::Receiver<()>) {
+async fn ws_notify(mut socket: WebSocket, shutdown: Shutdown, mut reload: watch::Receiver<()>) {
     loop {
         tokio::select! {
-            res = notifier.changed() => {
+            _ = shutdown.handle() => {
+                return;
+            }
+            res = reload.changed() => {
                 if res.is_err() {
                     return;
                 }
