@@ -14,10 +14,14 @@ exceptions = [
 
 [bans]
 skip = [
-    { name = "aho-corasick", version = "=0.7.20" },
-    { name = "base64", version = "=0.13.1" },
-    { name = "hashbrown", version = "=0.12.3" },
-    { name = "minify-js", version = "=0.4.3" },
-    { name = "parse-js", version = "=0.10.3" },
-    { name = "syn", version = "=1.0.109" },
+    { name = "aho-corasick", version = "0.7" },
+    { name = "base64", version = "0.13" },
+    { name = "bitflags", version = "1" },
+    { name = "hashbrown", version = "<0.14" },
+    { name = "indexmap", version = "1" },
+    { name = "linux-raw-sys", version = "0.3" },
+    { name = "minify-js", version = "0.4" },
+    { name = "parse-js", version = "0.10" },
+    { name = "rustix", version = "0.37" },
+    { name = "syn", version = "1" },
 ]
