@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.3] - 2023-07-08
+
+### Bug Fixes
+
+- Shutdown WebSocket connection on shutdown to prevent hanging
+- Don't wait forever for the client to receive the reload signal
+
+### Miscellaneous Tasks
+
+- Update dependencies
+
+[0.3.3]: https://github.com/dnaka91/wazzup/compare/v0.3.2...0.3.3
+
 ## [0.3.2] - 2023-06-07
 
 ### Bug Fixes
