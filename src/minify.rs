@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::{anyhow, Result};
+use color_eyre::eyre::{eyre, Result};
 use ignore::{DirEntry, WalkBuilder};
 
 use crate::tools::WasmOpt;
@@ -71,7 +71,7 @@ pub fn js(project: &Path) -> Result<Reduction> {
             &original,
             &mut minified,
         )
-        .map_err(|e| anyhow!("failed minifying JavaScript: {e}"))?;
+        .map_err(|e| eyre!("failed minifying JavaScript: {e}"))?;
 
         reduction.minified += minified.len();
 

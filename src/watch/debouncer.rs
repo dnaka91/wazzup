@@ -14,7 +14,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use flume::Selector;
 use tracing::{debug, trace};
 

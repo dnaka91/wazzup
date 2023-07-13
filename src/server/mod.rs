@@ -2,7 +2,6 @@
 
 use std::{net::Ipv4Addr, path::PathBuf, time::Duration};
 
-use anyhow::Result;
 use axum::{
     extract::{
         ws::{Message, WebSocket},
@@ -13,6 +12,7 @@ use axum::{
     routing::{get, get_service},
     Router,
 };
+use color_eyre::eyre::Result;
 use tokio::{sync::watch, time};
 use tokio_shutdown::Shutdown;
 use tower_http::services::{ServeDir, ServeFile};

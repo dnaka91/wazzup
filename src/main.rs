@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::Result;
+use color_eyre::Result;
 use flume::Selector;
 use serde::Deserialize;
 use tracing::{debug, error, info, Level};
@@ -30,6 +30,7 @@ mod watch;
 fn main() -> Result<()> {
     let args = Cli::parse();
 
+    color_eyre::install()?;
     init_logger(args.quiet, args.verbose);
 
     if !Rustup::check_wasm_target()? {

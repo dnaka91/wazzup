@@ -5,7 +5,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::Result;
+use color_eyre::Result;
 use tabled::{
     settings::{
         object::Rows,

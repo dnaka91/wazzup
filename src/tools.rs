@@ -6,8 +6,8 @@ use std::{
     process::Command,
 };
 
-use anyhow::{bail, Context, Result};
 use cargo_lock::Lockfile;
+use color_eyre::eyre::{bail, eyre, Result, WrapErr};
 use directories::ProjectDirs;
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
@@ -103,7 +103,7 @@ impl Cargo {
         }
 
         let meta = serde_json::from_slice::<Metadata>(&output.stdout)
-            .context("failed parsing Cargo metadata")?;
+            .wrap_err("failed parsing Cargo metadata")?;
 
         Ok(Self {
             workspace_dir: meta.workspace_root,
@@ -168,7 +168,7 @@ impl WasmBindgen {
             .packages
             .into_iter()
             .find(|p| p.name.as_str() == "wasm-bindgen")
-            .context("no wasm-bindgen dependency")?
+            .ok_or_else(|| eyre!("no wasm-bindgen dependency"))?
             .version)
     }
 
@@ -176,7 +176,7 @@ impl WasmBindgen {
     /// version may or may not exist on the system.
     pub fn new(version: semver::Version) -> Result<Self> {
         let path = ProjectDirs::from("rocks", "dnaka91", "wazzup")
-            .context("failed finding project dirs")?
+            .ok_or_else(|| eyre!("failed finding project dirs"))?
             .cache_dir()
             .join(format!("wasm-bindgen/{version}/wasm-bindgen"));
 
@@ -361,7 +361,7 @@ impl Tailwind {
 }
 
 fn find_bin(name: &str) -> Result<PathBuf> {
-    which::which(name).with_context(|| {
+    which::which(name).wrap_err_with(|| {
         format!(
             "missing `{name}` binary, try to install it through your OS package manager and make \
              sure it's available through the PATH env variable"

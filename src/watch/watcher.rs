@@ -6,7 +6,7 @@ use std::{
     thread,
 };
 
-use anyhow::Result;
+use color_eyre::eyre::Result;
 use flume::Selector;
 use ignore::{
     gitignore::{Gitignore, GitignoreBuilder},

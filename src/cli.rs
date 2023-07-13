@@ -6,9 +6,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use anyhow::{ensure, Context, Result};
 use clap::{ArgAction, Args, CommandFactory, Parser, Subcommand, ValueHint};
 use clap_complete::Shell;
+use color_eyre::eyre::{ensure, Result, WrapErr};
 
 #[derive(Debug, Parser)]
 #[command(about, author, version)]
@@ -111,7 +111,7 @@ pub fn manpages(dir: &Path) -> Result<()> {
             .write(true)
             .create_new(true)
             .open(&out)
-            .with_context(|| format!("the file `{}` already exists", out.display()))?;
+            .wrap_err_with(|| format!("the file `{}` already exists", out.display()))?;
 
         clap_mangen::Man::new(app.clone()).render(&mut out)?;
         out.flush()?;

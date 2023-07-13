@@ -4,7 +4,7 @@ use std::{
     path::Path,
 };
 
-use anyhow::{Context, Result};
+use color_eyre::eyre::{eyre, Result};
 use ignore::WalkBuilder;
 
 use crate::tools::{Cargo, Sass, Tailwind, WasmBindgen};
@@ -28,10 +28,10 @@ fn load_index(project: &Path) -> Result<HtmlIndex> {
 
     let (top, rest) = data
         .split_once("<!--WAZZUP-HEAD-->")
-        .context("missing WAZZUP-HEAD marker")?;
+        .ok_or_else(|| eyre!("missing WAZZUP-HEAD marker"))?;
     let (middle, bottom) = rest
         .split_once("<!--WAZZUP-BODY-->")
-        .context("missing WAZZUP-BODY marker")?;
+        .ok_or_else(|| eyre!("missing WAZZUP-BODY marker"))?;
 
     Ok(HtmlIndex {
         top: top.trim_matches(TRIM_CHARS).to_owned(),
@@ -135,7 +135,9 @@ pub fn assets(project: &Path) -> Result<()> {
         .git_ignore(true)
         .parents(true)
         .filter_entry(move |entry| {
-            let Ok(path) = entry.path().strip_prefix(&assets) else { return false };
+            let Ok(path) = entry.path().strip_prefix(&assets) else {
+                return false;
+            };
             path != Path::new("main.sass")
                 && path != Path::new("main.scss")
                 && path != Path::new("main.css")
@@ -199,8 +201,8 @@ pub fn asset(project: &Path, asset: &Path) -> Result<()> {
 mod tests {
     use std::path::Path;
 
-    use anyhow::Result;
     use assert_fs::prelude::*;
+    use color_eyre::Result;
     use indoc::indoc;
 
     const INDEX_HTML: &str = indoc! {r#"
