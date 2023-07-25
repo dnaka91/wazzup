@@ -4,7 +4,10 @@ use std::{
     path::Path,
 };
 
-use color_eyre::eyre::{eyre, Result};
+use color_eyre::{
+    eyre::{eyre, Context, Result},
+    Help, SectionExt,
+};
 use ignore::WalkBuilder;
 
 use crate::tools::{Cargo, Sass, Tailwind, WasmBindgen};
@@ -24,14 +27,21 @@ fn load_index(project: &Path) -> Result<HtmlIndex> {
     const TRIM_CHARS: &[char] = &[' ', '\t'];
 
     let path = project.join("index.html");
-    let data = fs::read_to_string(path)?;
+    let data = fs::read_to_string(path)
+        .wrap_err("failed to read the project's `index.html`")
+        .note("your project must contain a `index.html` file at its root")
+        .suggestion("check the status with `wazzup status`")?;
 
     let (top, rest) = data
         .split_once("<!--WAZZUP-HEAD-->")
-        .ok_or_else(|| eyre!("missing WAZZUP-HEAD marker"))?;
+        .ok_or_else(|| eyre!("missing WAZZUP-HEAD marker"))
+        .note("the index.html must contain a <!--WAZZUP-HEAD--> comment in the head section")
+        .with_section(|| data.trim().to_owned().header("index.html:"))?;
     let (middle, bottom) = rest
         .split_once("<!--WAZZUP-BODY-->")
-        .ok_or_else(|| eyre!("missing WAZZUP-BODY marker"))?;
+        .ok_or_else(|| eyre!("missing WAZZUP-BODY marker"))
+        .note("the index.html must contain a <!--WAZZUP-BODY--> comment in the body section")
+        .with_section(|| data.trim().to_owned().header("index.html:"))?;
 
     Ok(HtmlIndex {
         top: top.trim_matches(TRIM_CHARS).to_owned(),

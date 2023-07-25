@@ -7,7 +7,10 @@ use std::{
 };
 
 use cargo_lock::Lockfile;
-use color_eyre::eyre::{bail, eyre, Result, WrapErr};
+use color_eyre::{
+    eyre::{bail, eyre, Result, WrapErr},
+    Help, SectionExt,
+};
 use directories::ProjectDirs;
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
@@ -96,13 +99,14 @@ impl Cargo {
         let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!(
-                "failed running cargo:\n{}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(eyre!("cargo exited with non-zero status code"))
+                .with_section(move || format!("{cmd:?}").header("Command:"))
+                .with_section(move || stderr.trim().to_string().header("Stderr:"))?;
         }
 
-        let meta = serde_json::from_slice::<Metadata>(&output.stdout)
+        let mut deser = serde_json::Deserializer::from_slice(&output.stdout);
+        let meta = serde_path_to_error::deserialize::<_, Metadata>(&mut deser)
             .wrap_err("failed parsing Cargo metadata")?;
 
         Ok(Self {
@@ -131,10 +135,10 @@ impl Cargo {
         let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!(
-                "failed running cargo:\n{}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(eyre!("cargo exited with non-zero status code"))
+                .with_section(move || format!("{cmd:?}").header("Command:"))
+                .with_section(move || stderr.trim().to_string().header("Stderr:"))?;
         }
 
         Ok(())
@@ -239,22 +243,24 @@ impl WasmBindgen {
     }
 
     pub fn run(&self, target: &Path, out: &Path) -> Result<()> {
-        let output = Command::new(&self.path)
-            .args([
-                "--target",
-                "web",
-                "--no-typescript",
-                "--omit-default-module-path",
-                "--out-dir",
-            ])
-            .args([out, target])
-            .output()?;
+        let mut cmd = Command::new(&self.path);
+
+        cmd.args([
+            "--target",
+            "web",
+            "--no-typescript",
+            "--omit-default-module-path",
+            "--out-dir",
+        ]);
+        cmd.args([out, target]);
+
+        let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!(
-                "failed running wasm-bindgen: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(eyre!("wasm-bindgen exited with non-zero status code"))
+                .with_section(move || format!("{cmd:?}").header("Command:"))
+                .with_section(move || stderr.trim().to_string().header("Stderr:"))?;
         }
 
         Ok(())
@@ -275,16 +281,18 @@ impl WasmOpt {
     }
 
     pub fn run(target: &Path) -> Result<()> {
-        let output = Command::new(Self::bin_path()?)
-            .args(["-O4", "--output"])
-            .args([target, target])
-            .output()?;
+        let mut cmd = Command::new(Self::bin_path()?);
+
+        cmd.args(["-O4", "--output"]);
+        cmd.args([target, target]);
+
+        let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!(
-                "failed running wasm-opt: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(eyre!("wasm-opt exited with non-zero status code"))
+                .with_section(move || format!("{cmd:?}").header("Command:"))
+                .with_section(move || stderr.trim().to_string().header("Stderr:"))?;
         }
 
         Ok(())
@@ -307,17 +315,20 @@ impl Sass {
     pub fn run(target: &Path, out: &Path, release: bool) -> Result<()> {
         let mut cmd = Command::new(Self::bin_path()?);
 
+        cmd.arg("--no-source-map");
+        cmd.args([target, out]);
+
         if release {
             cmd.args(["--style", "compressed"]);
         }
 
-        let output = cmd.arg("--no-source-map").args([target, out]).output()?;
+        let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!(
-                "failed running sass: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(eyre!("sass exited with non-zero status code"))
+                .with_section(move || format!("{cmd:?}").header("Command:"))
+                .with_section(move || stderr.trim().to_string().header("Stderr:"))?;
         }
 
         Ok(())
@@ -350,10 +361,10 @@ impl Tailwind {
         let output = cmd.output()?;
 
         if !output.status.success() {
-            bail!(
-                "failed running tailwind: {}",
-                String::from_utf8_lossy(&output.stderr)
-            );
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            Err(eyre!("tailwindcss exited with non-zero status code"))
+                .with_section(move || format!("{cmd:?}").header("Command:"))
+                .with_section(move || stderr.trim().to_string().header("Stderr:"))?;
         }
 
         Ok(())

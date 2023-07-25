@@ -7,7 +7,10 @@ use std::{
     time::Duration,
 };
 
-use color_eyre::Result;
+use color_eyre::{
+    eyre::{Result, WrapErr},
+    Help,
+};
 use flume::Selector;
 use serde::Deserialize;
 use tracing::{debug, error, info, Level};
@@ -77,10 +80,15 @@ fn package_name(project: &Path) -> Result<String> {
         name: String,
     }
 
-    let buf = fs::read_to_string(project.join("Cargo.toml"))?;
+    let buf = fs::read_to_string(project.join("Cargo.toml"))
+        .wrap_err("failed to read the Cargo.toml manifest")
+        .note("wazzup expects to be run from within a Rust Cargo project")
+        .note("ensure you run from the root of the project")?;
 
-    toml::from_str::<CargoToml>(&buf)
-        .map_err(Into::into)
+    let deser = toml::Deserializer::new(&buf);
+
+    serde_path_to_error::deserialize::<_, CargoToml>(deser)
+        .wrap_err("failed to parse the Cargo.toml manifest")
         .map(|toml| toml.package.name)
 }
 
@@ -118,10 +126,15 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     let out = project.join("dist");
 
     if out.exists() {
-        fs::remove_dir_all(&out)?;
+        fs::remove_dir_all(&out)
+            .wrap_err("failed clearing output directory")
+            .with_note(|| format!("output directory: {}", out.display()))
+            .suggestion("try deleting the directory manually")?;
     }
 
-    fs::create_dir(&out)?;
+    fs::create_dir(&out)
+        .wrap_err("failed creating the output directory")
+        .with_note(|| format!("output directory: {}", out.display()))?;
 
     let name = package_name(&project)?;
     let css_mode = css_mode(&project)?;
