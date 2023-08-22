@@ -4,6 +4,7 @@ targets = [
 
 [licenses]
 allow = [
+    "CC0-1.0",
     "MPL-2.0",
 ]
 allow-osi-fsf-free = "both"
@@ -15,13 +16,11 @@ exceptions = [
 [bans]
 skip = [
     { name = "aho-corasick", version = "0.7" },
-    { name = "base64", version = "0.13" },
     { name = "bitflags", version = "1" },
     { name = "hashbrown", version = "<0.14" },
     { name = "indexmap", version = "1" },
-    { name = "linux-raw-sys", version = "0.3" },
     { name = "minify-js", version = "0.4" },
     { name = "parse-js", version = "0.10" },
-    { name = "rustix", version = "0.37" },
+    { name = "socket2", version = "0.4" },
     { name = "syn", version = "1" },
 ]
