@@ -168,8 +168,6 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
 
 /// Run a local dev server that hosts the project and rebuilds on file changes.
 fn dev(args: DevArgs) -> Result<()> {
-    build(BuildArgs::default(), true)?;
-
     let project = std::env::current_dir()?;
     let name = package_name(&project)?;
     let css_mode = css_mode(&project)?;
@@ -182,23 +180,33 @@ fn dev(args: DevArgs) -> Result<()> {
     let thread = thread::spawn({
         let project = project.clone();
 
-        move || loop {
-            let res = Selector::new()
-                .recv(&shutdown_rx, |_| None)
-                .recv(debouncer.receiver(), |change| change.ok())
-                .wait();
+        move || {
+            if let Err(e) = build(BuildArgs::default(), true) {
+                error!(error = %e, "failed building");
+                return;
+            }
 
-            if let Some(change) = res {
-                if let Err(e) = rebuild(&project, &name, css_mode, change) {
-                    error!(error = %e, "failed rebuilding");
-                    continue;
+            reload_tx.send(()).ok();
+            debug!("sent reload signal");
+
+            loop {
+                let res = Selector::new()
+                    .recv(&shutdown_rx, |_| None)
+                    .recv(debouncer.receiver(), |change| change.ok())
+                    .wait();
+
+                if let Some(change) = res {
+                    if let Err(e) = rebuild(&project, &name, css_mode, change) {
+                        error!(error = %e, "failed rebuilding");
+                        continue;
+                    }
+
+                    reload_tx.send(()).ok();
+                    debug!("sent reload signal");
+                } else {
+                    debouncer.shutdown().shutdown();
+                    break;
                 }
-
-                reload_tx.send(()).ok();
-                debug!("sent reload signal");
-            } else {
-                debouncer.shutdown().shutdown();
-                break;
             }
         }
     });
