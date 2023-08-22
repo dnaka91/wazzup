@@ -147,7 +147,13 @@ impl ProjectWatcher {
     /// Remove the given paths from the watcher again.
     fn remove_paths(&mut self, paths: &[impl AsRef<Path>]) {
         for path in paths {
-            if let Err(e) = self.watcher.unwatch(path.as_ref()) {
+            let path = path.as_ref();
+
+            if self.gitignore.matched(path, path.is_dir()).is_ignore() {
+                continue;
+            }
+
+            if let Err(e) = self.watcher.unwatch(path) {
                 warn!(error = %e, "failed removing path from watcher");
             }
         }
