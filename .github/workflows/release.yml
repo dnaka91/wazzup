@@ -55,7 +55,7 @@ jobs:
       - name: Build and upload binary
         uses: taiki-e/upload-rust-binary-action@v1
         with:
-          bin: llvm-cov-pretty
+          bin: wazzup
           target: ${{ matrix.target }}
           checksum: sha512
         env:
