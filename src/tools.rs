@@ -350,7 +350,20 @@ impl Tailwind {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
 
         BIN_PATH
-            .get_or_try_init(|| find_bin("tailwindcss"))
+            .get_or_try_init(|| {
+                let pwd = std::env::current_dir()?.display().to_string();
+                let path = std::env::var("PATH")?;
+
+                which::which_in(
+                    "tailwindcss",
+                    Some(format!("{pwd}/node_modules/.bin:{path}")),
+                    pwd,
+                )
+                .wrap_err(
+                    "missing `tainwindcss` binary, try to install it through your OS package \
+                     manager and make sure it's available through the PATH env variable",
+                )
+            })
             .map(|path| path.as_path())
     }
 
@@ -379,7 +392,7 @@ impl Tailwind {
 }
 
 fn find_bin(name: &str) -> Result<PathBuf> {
-    which::which(name).wrap_err_with(|| {
+    which::which_global(name).wrap_err_with(|| {
         format!(
             "missing `{name}` binary, try to install it through your OS package manager and make \
              sure it's available through the PATH env variable"
