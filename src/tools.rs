@@ -14,6 +14,7 @@ use color_eyre::{
 use directories::ProjectDirs;
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
+use tracing::trace;
 
 /// Wrapper around [rustup](https://rustup.rs/), to manage toolchain and target installations.
 pub struct Rustup {}
@@ -96,6 +97,7 @@ impl Cargo {
         cmd.current_dir(working_dir);
         cmd.args(["metadata", "--format-version", "1"]);
 
+        trace!(?cmd, "invoking cargo");
         let output = cmd.output()?;
 
         if !output.status.success() {
@@ -132,6 +134,7 @@ impl Cargo {
             cmd.args(["--profile", profile]);
         }
 
+        trace!(?cmd, "invoking cargo");
         let output = cmd.output()?;
 
         if !output.status.success() {
@@ -254,6 +257,7 @@ impl WasmBindgen {
         ]);
         cmd.args([out, target]);
 
+        trace!(?cmd, "invoking wasm-bindgen");
         let output = cmd.output()?;
 
         if !output.status.success() {
@@ -286,6 +290,7 @@ impl WasmOpt {
         cmd.args(["-O4", "--output"]);
         cmd.args([target, target]);
 
+        trace!(?cmd, "invoking wasm-opt");
         let output = cmd.output()?;
 
         if !output.status.success() {
@@ -322,6 +327,7 @@ impl Sass {
             cmd.args(["--style", "compressed"]);
         }
 
+        trace!(?cmd, "invoking sass");
         let output = cmd.output()?;
 
         if !output.status.success() {
@@ -358,6 +364,7 @@ impl Tailwind {
             cmd.arg("--minify");
         }
 
+        trace!(?cmd, "invoking tailwindcss");
         let output = cmd.output()?;
 
         if !output.status.success() {
