@@ -208,7 +208,7 @@ pub fn watch(project: PathBuf) -> Result<Handle> {
 
     let gitignore = {
         let mut builder = GitignoreBuilder::new(&project);
-        builder.add_line(None, ".git/")?;
+        builder.add_line(None, ".git/**")?;
 
         if let Some(error) = builder.add(project.join(".gitignore")) {
             return Err(error.into());
