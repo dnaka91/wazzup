@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2023-08-22
+
+### Bug Fixes
+
+- Ensure the .git folder is properly excluded
+- Ensure a path is not ignored when unwatching
+
+### Features
+
+- Reduce crate package size
+- Improve error messages with suggestions
+- Start up the dev server before the build finishes
+- Log external tool invocation in verbose mode
+- Use project-local tailwind binary if available
+- Add CI for testing and pre-compiled binaries
+
+### Miscellaneous Tasks
+
+- Update all dependencies
+- Extend crate metadata for crates.io
+- Reduce the CI setup to only pre-compiled binaries
+
+### Refactor
+
+- Replace `anyhow` with `color-eyre` for better error reporting
+
+[0.4.0]: https://github.com/dnaka91/wazzup/compare/v0.3.3...v0.4.0
+
 ## [0.3.3] - 2023-07-08
 
 ### Bug Fixes
@@ -13,7 +41,7 @@ All notable changes to this project will be documented in this file.
 
 - Update dependencies
 
-[0.3.3]: https://github.com/dnaka91/wazzup/compare/v0.3.2...0.3.3
+[0.3.3]: https://github.com/dnaka91/wazzup/compare/v0.3.2...v0.3.3
 
 ## [0.3.2] - 2023-06-07
 

@@ -1,12 +1,12 @@
 [package]
 name = "wazzup"
-version = "0.3.3"
+version = "0.4.0"
 edition = "2021"
 license = "AGPL-3.0-only"
 description = "Very opinionated Rust WASM project builder"
 homepage = "https://github.com/dnaka91/wazzup"
 repository = "https://github.com/dnaka91/wazzup"
-keywords = ["build-tool", "dev-server", "html", "sass", "tailwindcss", "tauri", "wasm"]
+keywords = ["build-tool", "dev-server", "tauri", "wasm"]
 categories = ["command-line-utilities", "development-tools", "wasm", "web-programming"]
 authors = ["Dominik Nakamura <dnaka91@gmail.com>"]
 include = ["src/**/*", "CHANGELOG.md", "LICENSE", "README.md"]
