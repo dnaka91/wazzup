@@ -14,7 +14,7 @@ include = ["src/**/*", "CHANGELOG.md", "LICENSE", "README.md"]
 [dependencies]
 axum = { version = "0.6.20", features = ["http2", "ws"] }
 cargo-lock = "9.0.0"
-clap = { version = "4.3.23", features = ["derive"] }
+clap = { version = "4.3.23", features = ["derive", "wrap_help"] }
 clap_complete = "4.3.2"
 clap_mangen = "0.2.12"
 color-eyre = { version = "0.6.2", default-features = false }
