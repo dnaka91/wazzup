@@ -56,6 +56,7 @@ jobs:
         uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: wazzup
+          archive: $bin-$tag-$target
           target: ${{ matrix.target }}
           checksum: sha512
         env:
