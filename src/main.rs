@@ -139,7 +139,7 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     let name = package_name(&project)?;
     let css_mode = css_mode(&project)?;
 
-    build::index(&project, &name, args.release, dev)?;
+    build::index(&project, &name, args.release, &args.base_url, dev)?;
     info!("built index.html");
 
     match css_mode {
@@ -237,7 +237,7 @@ fn rebuild(project: &Path, name: &str, css_mode: CssMode, change: ChangeType) ->
 
     match change {
         ChangeType::Html => {
-            build::index(project, name, false, true)?;
+            build::index(project, name, false, "/", true)?;
             info!("rebuilt index.html");
         }
         ChangeType::Css => {

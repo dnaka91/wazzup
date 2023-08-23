@@ -12,9 +12,15 @@ use ignore::WalkBuilder;
 
 use crate::tools::{Cargo, Sass, Tailwind, WasmBindgen};
 
-pub fn index(project: &Path, app_name: &str, release: bool, dev: bool) -> Result<()> {
+pub fn index(
+    project: &Path,
+    app_name: &str,
+    release: bool,
+    base_url: &str,
+    dev: bool,
+) -> Result<()> {
     let index = load_index(project)?;
-    transform_index(&index, app_name, project, release, dev)
+    transform_index(&index, app_name, project, release, base_url, dev)
 }
 
 struct HtmlIndex {
@@ -55,16 +61,21 @@ fn transform_index(
     app_name: &str,
     project: &Path,
     release: bool,
+    base_url: &str,
     dev: bool,
 ) -> Result<()> {
     let mut file = BufWriter::new(File::create(project.join("dist/index.html"))?);
+    let base = base_url.strip_suffix('/').unwrap_or(base_url);
 
     file.write_all(index.top.as_bytes())?;
 
     if !release {
         writeln!(&mut file, r#"    <!-- stylesheet -->"#)?;
     }
-    write!(&mut file, r#"    <link rel="stylesheet" href="/main.css">"#)?;
+    write!(
+        &mut file,
+        r#"    <link rel="stylesheet" href="{base}/main.css">"#
+    )?;
 
     file.write_all(index.middle.as_bytes())?;
 
@@ -72,8 +83,14 @@ fn transform_index(
         writeln!(&mut file, r#"    <!-- WASM initialization -->"#)?;
     }
     writeln!(&mut file, r#"    <script type="module">"#)?;
-    writeln!(&mut file, r#"      import init from '/{app_name}.js';"#)?;
-    writeln!(&mut file, r#"      await init('/{app_name}_bg.wasm');"#)?;
+    writeln!(
+        &mut file,
+        r#"      import init from '{base}/{app_name}.js';"#,
+    )?;
+    writeln!(
+        &mut file,
+        r#"      await init('{base}/{app_name}_bg.wasm');"#,
+    )?;
     write!(&mut file, r#"    </script>"#)?;
 
     if dev {
@@ -234,7 +251,7 @@ mod tests {
         temp.child("index.html").write_str(INDEX_HTML)?;
         temp.child("dist").create_dir_all()?;
 
-        super::index(temp.path(), "test", false, false)?;
+        super::index(temp.path(), "test", false, "/", false)?;
 
         temp.child("dist/index.html").assert(indoc! {r#"
                 <!DOCTYPE html>
@@ -263,7 +280,7 @@ mod tests {
         temp.child("index.html").write_str(INDEX_HTML)?;
         temp.child("dist").create_dir_all()?;
 
-        super::index(temp.path(), "test", false, true)?;
+        super::index(temp.path(), "test", false, "/", true)?;
 
         temp.child("dist/index.html").assert(indoc! {r#"
                 <!DOCTYPE html>
@@ -294,7 +311,7 @@ mod tests {
         temp.child("index.html").write_str(INDEX_HTML)?;
         temp.child("dist").create_dir_all()?;
 
-        super::index(temp.path(), "test", true, false)?;
+        super::index(temp.path(), "test", true, "/", false)?;
 
         temp.child("dist/index.html").assert(indoc! {r#"
                 <!DOCTYPE html>

@@ -65,6 +65,18 @@ pub struct BuildArgs {
     /// The actual profile to use for release mode.
     #[arg(long, default_value = "release")]
     pub profile: String,
+    /// Starting URL under which is project is expected to be hosted.
+    ///
+    /// This can be a full URL like `https://example.com/project`, a simple path like `/subfolder`
+    /// and relative paths as well (although doing path like `here/../..` should be avoided).
+    ///
+    /// The default `/` should be sufficient as long as the project is hosted at the root of a
+    /// domain or subdomain, and a custom base URL is needed when it is hosted under a subfolder.
+    ///
+    /// The `.` path can be use to make all URLs relative and more flexible towards where the files
+    /// are being hosted.
+    #[arg(long, default_value = "/")]
+    pub base_url: String,
 }
 
 impl Default for BuildArgs {
@@ -72,6 +84,7 @@ impl Default for BuildArgs {
         Self {
             release: false,
             profile: "release".to_owned(),
+            base_url: "/".to_owned(),
         }
     }
 }
