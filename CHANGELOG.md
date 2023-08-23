@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2023-08-23
+
+### Documentation
+
+- Correct spelling error in an error message
+
+### Features
+
+- Enable automatic wrapping of terminal help messages
+- Allow passing a custom base URL when building a project
+
+### Miscellaneous Tasks
+
+- Include the tag in pre-compiled release binary names
+
+[0.4.1]: https://github.com/dnaka91/wazzup/compare/v0.4.0...v0.4.1
+
 ## [0.4.0] - 2023-08-22
 
 ### Bug Fixes
