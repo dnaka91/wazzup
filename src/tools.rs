@@ -360,7 +360,7 @@ impl Tailwind {
                     pwd,
                 )
                 .wrap_err(
-                    "missing `tainwindcss` binary, try to install it through your OS package \
+                    "missing `tailwindcss` binary, try to install it through your OS package \
                      manager and make sure it's available through the PATH env variable",
                 )
             })
