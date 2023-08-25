@@ -25,6 +25,7 @@ pub fn status(project: &Path) -> Result<()> {
             tool_status("cargo")?,
             tool_status("wasm-opt")?,
             tool_status("sass")?,
+            tool_status("tailwindcss")?,
         ],
     );
 
