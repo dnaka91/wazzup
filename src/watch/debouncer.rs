@@ -77,10 +77,8 @@ pub fn debounce(watcher: watcher::Handle, debounce: Duration) -> Result<Handle> 
                     let expired = debouncer
                         .changes
                         .iter()
-                        .filter_map(|(change, time)| {
-                            (now.duration_since(*time) >= debouncer.debounce)
-                                .then(|| change.clone())
-                        })
+                        .filter(|&(_, time)| now.duration_since(*time) >= debouncer.debounce)
+                        .map(|(change, _)| change.clone())
                         .collect::<HashSet<_>>();
 
                     for change in expired {
