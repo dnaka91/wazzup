@@ -5,17 +5,21 @@ All notable changes to this project will be documented in this file.
 <!-- markdownlint-disable no-duplicate-header -->
 <!-- markdownlint-disable no-trailing-spaces -->
 
-## Unreleased
+
+## [0.4.2](https://github.com/dnaka91/wazzup/compare/v0.4.1...v0.4.2) - 2024-01-29
 
 ### <!-- 0 -->⛰️ Features
 
 - Add TailwindCSS to the tool status list ([3cc9017](https://github.com/dnaka91/wazzup/commit/3cc9017c3958c726d2bdc84cebaad3a18f29e9d0))
   > As wazzup has support for TailwindCSS for a while now, it should show
   > the installation status in addition to only SASS.
+- Several overall improvements and dependency updates ([bb62fad](https://github.com/dnaka91/wazzup/commit/bb62fad9a69ecafe4479b4e59b59aa768f753c73))
+  > Small tweaks here and there to improve stability and smaller features
+  > collected over time, and dependency updates as well.
 
 ### <!-- 2 -->📚 Documentation
 
-- Improve changelog format ([606fad2](https://github.com/dnaka91/wazzup/commit/606fad2e37f6364052f4bd3c7d142c872319cec2))
+- Improve changelog format ([c5bb23b](https://github.com/dnaka91/wazzup/commit/c5bb23bfdcc98756e7b7bc9c4db3ad05fc2290a6))
   > Make the changelog more colorful (inspired by `git-cliff`'s own config),
   > by introducing a few emojis and rendering the commit body if present.
 
