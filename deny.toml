@@ -15,14 +15,18 @@ exceptions = [
 
 [bans]
 skip = [
+    { name = "ahash", version = "0.7" },
     { name = "aho-corasick", version = "0.7" },
     { name = "bitflags", version = "1" },
     { name = "hashbrown", version = "<0.14" },
-    { name = "indexmap", version = "1" },
-    { name = "minify-js", version = "0.4" },
-    { name = "parse-js", version = "0.10" },
-    { name = "socket2", version = "0.4" },
+    { name = "itertools", version = "0.10" },
+    { name = "minify-js", version = "0.5" },
+    { name = "parse-js", version = "0.17" },
     { name = "syn", version = "1" },
-    { name = "toml", version = "0.7" },
     { name = "toml_edit", version = "0.19" },
+    { name = "toml", version = "0.7" },
+]
+skip-tree = [
+    { name = "phf_codegen", version = "0.10", depth = 2 },
+    { name = "phf", version = "0.10", depth = 2 },
 ]

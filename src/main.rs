@@ -20,7 +20,10 @@ use self::{
     cli::{BuildArgs, Command, DevArgs},
     watch::ChangeType,
 };
-use crate::{cli::Cli, tools::Rustup};
+use crate::{
+    cli::Cli,
+    tools::{Cargo, Rustup, Sass, Tailwind},
+};
 
 mod build;
 mod cli;
@@ -136,6 +139,7 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
         .wrap_err("failed creating the output directory")
         .with_note(|| format!("output directory: {}", out.display()))?;
 
+    let cargo = Cargo::new(&project)?;
     let name = package_name(&project)?;
     let css_mode = css_mode(&project)?;
 
@@ -143,15 +147,21 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     info!("built index.html");
 
     match css_mode {
-        CssMode::Sass => build::sass(&project, args.release)?,
-        CssMode::Tailwind => build::tailwind(&project, args.release)?,
+        CssMode::Sass => {
+            let sass = Sass::new(cargo.workspace_dir(), &project)?;
+            build::sass(&sass, &project, args.release)?
+        }
+        CssMode::Tailwind => {
+            let tailwind = Tailwind::new(cargo.workspace_dir(), &project)?;
+            build::tailwind(&tailwind, &project, args.release)?
+        }
     }
     info!(mode = %css_mode, "built stylesheets");
 
     build::assets(&project)?;
     info!("built assets");
 
-    build::rust(&project, &name, args.release, &args.profile)?;
+    build::rust(&cargo, &project, &name, args.release, &args.profile)?;
     info!("built WASM files");
 
     if args.release {
@@ -179,10 +189,13 @@ fn dev(args: DevArgs) -> Result<()> {
 
     let thread = thread::spawn({
         let project = project.clone();
+        let cargo = Cargo::new(&project)?;
+        let sass = Sass::new(cargo.workspace_dir(), &project)?;
+        let tailwind = Tailwind::new(cargo.workspace_dir(), &project)?;
 
         move || {
             if let Err(e) = build(BuildArgs::default(), true) {
-                error!(error = %e, "failed building");
+                error!(error = ?e, "failed building");
                 return;
             }
 
@@ -196,8 +209,10 @@ fn dev(args: DevArgs) -> Result<()> {
                     .wait();
 
                 if let Some(change) = res {
-                    if let Err(e) = rebuild(&project, &name, css_mode, change) {
-                        error!(error = %e, "failed rebuilding");
+                    if let Err(e) =
+                        rebuild(&cargo, &sass, &tailwind, &project, &name, css_mode, change)
+                    {
+                        error!(error = ?e, "failed rebuilding");
                         continue;
                     }
 
@@ -222,7 +237,15 @@ fn dev(args: DevArgs) -> Result<()> {
 /// Rebuild parts of the application, based on the kind of source files that changed. For example,
 /// only rebuild the WASM binary if Rust code changed or only the stylesheets if any sass/scss/css
 /// files changed.
-fn rebuild(project: &Path, name: &str, css_mode: CssMode, change: ChangeType) -> Result<()> {
+fn rebuild(
+    cargo: &Cargo,
+    sass: &Sass,
+    tailwind: &Tailwind,
+    project: &Path,
+    name: &str,
+    css_mode: CssMode,
+    change: ChangeType,
+) -> Result<()> {
     // Tailwind scans project files to detect what CSS classes are used. Therefore, we have to run
     // it not just when CSS files changed, but when HTML or Rust files changed as well.
     if css_mode == CssMode::Tailwind
@@ -231,7 +254,7 @@ fn rebuild(project: &Path, name: &str, css_mode: CssMode, change: ChangeType) ->
             ChangeType::Html | ChangeType::Css | ChangeType::Rust
         )
     {
-        build::tailwind(project, false)?;
+        build::tailwind(tailwind, project, false)?;
         info!(mode = %css_mode, "rebuilt stylesheets");
     }
 
@@ -242,7 +265,7 @@ fn rebuild(project: &Path, name: &str, css_mode: CssMode, change: ChangeType) ->
         }
         ChangeType::Css => {
             if css_mode == CssMode::Sass {
-                build::sass(project, false)?;
+                build::sass(sass, project, false)?;
                 info!(mode = %css_mode, "rebuilt stylesheets");
             }
         }
@@ -251,7 +274,7 @@ fn rebuild(project: &Path, name: &str, css_mode: CssMode, change: ChangeType) ->
             info!("rebuilt asset");
         }
         ChangeType::Rust => {
-            build::rust(project, name, false, "release")?;
+            build::rust(cargo, project, name, false, "release")?;
             info!("rebuilt WASM files");
         }
     }

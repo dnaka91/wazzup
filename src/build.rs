@@ -108,9 +108,13 @@ fn transform_index(
     Ok(())
 }
 
-pub fn rust(project: &Path, app_name: &str, release: bool, profile: &str) -> Result<()> {
-    let cargo = Cargo::new(project)?;
-
+pub fn rust(
+    cargo: &Cargo,
+    project: &Path,
+    app_name: &str,
+    release: bool,
+    profile: &str,
+) -> Result<()> {
     cargo.run(project, release, profile)?;
 
     let bindgen = WasmBindgen::new(WasmBindgen::find_version(
@@ -131,7 +135,7 @@ pub fn rust(project: &Path, app_name: &str, release: bool, profile: &str) -> Res
     Ok(())
 }
 
-pub fn sass(project: &Path, release: bool) -> Result<()> {
+pub fn sass(sass: &Sass, project: &Path, release: bool) -> Result<()> {
     let stylesheets = [
         project.join("assets/main.sass"),
         project.join("assets/main.scss"),
@@ -139,14 +143,14 @@ pub fn sass(project: &Path, release: bool) -> Result<()> {
     ];
 
     if let Some(stylesheet) = stylesheets.iter().find(|path| path.exists()) {
-        Sass::run(stylesheet, &project.join("dist/main.css"), release)?;
+        sass.run(stylesheet, &project.join("dist/main.css"), release)?;
     }
 
     Ok(())
 }
 
-pub fn tailwind(project: &Path, release: bool) -> Result<()> {
-    Tailwind::run(
+pub fn tailwind(tailwind: &Tailwind, project: &Path, release: bool) -> Result<()> {
+    tailwind.run(
         &project.join("assets/main.css"),
         &project.join("dist/main.css"),
         release,
@@ -231,6 +235,8 @@ mod tests {
     use assert_fs::prelude::*;
     use color_eyre::Result;
     use indoc::indoc;
+
+    use crate::tools::Sass;
 
     const INDEX_HTML: &str = indoc! {r#"
         <!DOCTYPE html>
@@ -339,7 +345,8 @@ mod tests {
               font-size: 16pt
         "})?;
 
-        super::sass(temp.path(), true)?;
+        let sass = Sass::new(temp.path(), temp.path())?;
+        super::sass(&sass, temp.path(), true)?;
 
         temp.child("dist/main.css")
             .assert(".test{font-size:16pt}\n");

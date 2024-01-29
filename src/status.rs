@@ -7,25 +7,26 @@ use std::{
 
 use color_eyre::Result;
 use tabled::{
-    settings::{
-        object::Rows,
-        style::{HorizontalLine, Line},
-        Alignment, Modify, Panel, Style,
-    },
+    settings::{object::Rows, style::HorizontalLine, Alignment, Modify, Panel, Style},
     Table, Tabled,
 };
 use yansi::{Color, Paint};
 
+use crate::tools::{self, Cargo};
+
 /// Display the status of required external tools, and mandatory files within the current project.
 pub fn status(project: &Path) -> Result<()> {
+    let cargo = Cargo::new(project)?;
+    let root = cargo.workspace_dir();
+
     print_table(
         "Tools",
         [
-            tool_status("rustup")?,
-            tool_status("cargo")?,
-            tool_status("wasm-opt")?,
-            tool_status("sass")?,
-            tool_status("tailwindcss")?,
+            tool_status_sys("rustup")?,
+            tool_status_sys("cargo")?,
+            tool_status_sys("wasm-opt")?,
+            tool_status_js("sass", root, project)?,
+            tool_status_js("tailwindcss", root, project)?,
         ],
     );
 
@@ -50,9 +51,9 @@ pub fn status(project: &Path) -> Result<()> {
 fn print_table(header: &str, values: impl IntoIterator<Item = impl Tabled>) {
     let table = Table::new(values)
         .with(Style::modern().remove_horizontal().horizontals([
-            HorizontalLine::new(0, Line::full('─', '─', '┌', '┐')),
-            HorizontalLine::new(1, Line::full('─', '┬', '├', '┤')),
-            HorizontalLine::new(2, Line::full('─', '┼', '├', '┤')),
+            (0, HorizontalLine::full('─', '─', '┌', '┐')),
+            (1, HorizontalLine::full('─', '┬', '├', '┤')),
+            (2, HorizontalLine::full('─', '┼', '├', '┤')),
         ]))
         .with(Panel::header(Paint::new(header).bold().to_string()))
         .with(Modify::new(Rows::first()).with(Alignment::center()))
@@ -118,18 +119,24 @@ fn display_pathbuf_opt(v: &Option<PathBuf>) -> String {
 }
 
 /// Determine the installation status of an external, system-installed tool.
-fn tool_status(binary_name: &'static str) -> Result<Tool> {
-    let (path, status) = match which::which(binary_name) {
+fn tool_status_sys(name: &'static str) -> Result<Tool> {
+    tool_status(name, tools::find_bin)
+}
+
+fn tool_status_js(name: &'static str, root: &Path, cwd: &Path) -> Result<Tool> {
+    tool_status(name, |name| tools::find_bin_js(name, root, cwd))
+}
+
+fn tool_status(name: &'static str, find: impl Fn(&'static str) -> Result<PathBuf>) -> Result<Tool> {
+    let (path, status) = match find(name) {
         Ok(path) => (Some(path), FileStatus::Found),
-        Err(which::Error::CannotFindBinaryPath) => (None, FileStatus::Missing),
-        Err(e) => return Err(e.into()),
+        Err(report) => match report.downcast_ref::<which::Error>() {
+            Some(which::Error::CannotFindBinaryPath) => (None, FileStatus::Missing),
+            _ => return Err(report),
+        },
     };
 
-    Ok(Tool {
-        name: binary_name,
-        status,
-        path,
-    })
+    Ok(Tool { name, status, path })
 }
 
 /// Determine the status of a file within the current project.

@@ -1,6 +1,6 @@
 //! Local server, to host the project for development purposes.
 
-use std::{net::Ipv4Addr, path::PathBuf, time::Duration};
+use std::{future::IntoFuture, net::Ipv4Addr, path::PathBuf, time::Duration};
 
 use axum::{
     extract::{
@@ -13,7 +13,7 @@ use axum::{
     Router,
 };
 use color_eyre::eyre::Result;
-use tokio::{sync::watch, time};
+use tokio::{net::TcpListener, sync::watch, time};
 use tokio_shutdown::Shutdown;
 use tower_http::services::{ServeDir, ServeFile};
 use tracing::debug;
@@ -64,10 +64,13 @@ async fn run_server(base: PathBuf, port: u16, notifier: watch::Receiver<()>) -> 
 
     // Always run on localhost only. It's a bad idea to publicly expose this server,
     // due to only doing the basics in terms of security.
-    axum::Server::try_bind(&(Ipv4Addr::LOCALHOST, port).into())?
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(shutdown.handle())
-        .await?;
+    let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, port)).await?;
+    let server = axum::serve(listener, app).into_future();
+
+    tokio::select! {
+        r = server => r?,
+        _ = shutdown.handle() => {}
+    }
 
     debug!("server shut down");
 

@@ -22,8 +22,8 @@ use std::{
     path::PathBuf,
 };
 
-pub use debouncer::{debounce, Handle as Debouncer};
-pub use watcher::{watch, Handle as Watcher};
+pub use debouncer::debounce;
+pub use watcher::watch;
 
 /// Size for any message channels used within the watcher and debouncer.
 const CHANNEL_SIZE: usize = 16;

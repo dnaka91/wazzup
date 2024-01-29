@@ -1,7 +1,8 @@
 //! Management and invocation of external tools, that are required to build projects.
 
 use std::{
-    fs,
+    ffi::OsString,
+    fs, iter,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -20,7 +21,7 @@ use tracing::trace;
 pub struct Rustup {}
 
 impl Rustup {
-    const WASM_TARGET: &str = "wasm32-unknown-unknown";
+    const WASM_TARGET: &'static str = "wasm32-unknown-unknown";
 
     fn bin_path() -> Result<&'static Path> {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
@@ -74,7 +75,7 @@ pub struct Cargo {
 }
 
 impl Cargo {
-    const WASM_TARGET: &str = "wasm32-unknown-unknown";
+    const WASM_TARGET: &'static str = "wasm32-unknown-unknown";
 
     fn bin_path() -> Result<&'static Path> {
         static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
@@ -306,19 +307,17 @@ impl WasmOpt {
 
 /// Wrapper around [dart-sass](https://github.com/sass/dart-sass), to compile SASS/SCSS/CSS files
 /// into optimized CSS stylesheets.
-pub struct Sass {}
+pub struct Sass {
+    bin_path: PathBuf,
+}
 
 impl Sass {
-    fn bin_path() -> Result<&'static Path> {
-        static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
-
-        BIN_PATH
-            .get_or_try_init(|| find_bin("sass"))
-            .map(|path| path.as_path())
+    pub fn new(root: &Path, project: &Path) -> Result<Self> {
+        find_bin_js("sass", root, project).map(|bin_path| Self { bin_path })
     }
 
-    pub fn run(target: &Path, out: &Path, release: bool) -> Result<()> {
-        let mut cmd = Command::new(Self::bin_path()?);
+    pub fn run(&self, target: &Path, out: &Path, release: bool) -> Result<()> {
+        let mut cmd = Command::new(&self.bin_path);
 
         cmd.arg("--no-source-map");
         cmd.args([target, out]);
@@ -343,32 +342,17 @@ impl Sass {
 
 /// Wrapper around [tailwind](https://github.com/tailwindlabs/tailwindcss), to generate
 /// `TailwindCSS` stylesheets based on the project source files.
-pub struct Tailwind {}
+pub struct Tailwind {
+    bin_path: PathBuf,
+}
 
 impl Tailwind {
-    fn bin_path() -> Result<&'static Path> {
-        static BIN_PATH: OnceCell<PathBuf> = OnceCell::new();
-
-        BIN_PATH
-            .get_or_try_init(|| {
-                let pwd = std::env::current_dir()?.display().to_string();
-                let path = std::env::var("PATH")?;
-
-                which::which_in(
-                    "tailwindcss",
-                    Some(format!("{pwd}/node_modules/.bin:{path}")),
-                    pwd,
-                )
-                .wrap_err(
-                    "missing `tailwindcss` binary, try to install it through your OS package \
-                     manager and make sure it's available through the PATH env variable",
-                )
-            })
-            .map(|path| path.as_path())
+    pub fn new(root: &Path, project: &Path) -> Result<Self> {
+        find_bin_js("tailwindcss", root, project).map(|bin_path| Self { bin_path })
     }
 
-    pub fn run(target: &Path, out: &Path, release: bool) -> Result<()> {
-        let mut cmd = Command::new(Self::bin_path()?);
+    pub fn run(&self, target: &Path, out: &Path, release: bool) -> Result<()> {
+        let mut cmd = Command::new(&self.bin_path);
 
         cmd.arg("--input").arg(target);
         cmd.arg("--output").arg(out);
@@ -391,13 +375,35 @@ impl Tailwind {
     }
 }
 
-fn find_bin(name: &str) -> Result<PathBuf> {
+pub fn find_bin(name: &str) -> Result<PathBuf> {
     which::which_global(name).wrap_err_with(|| {
         format!(
             "missing `{name}` binary, try to install it through your OS package manager and make \
              sure it's available through the PATH env variable"
         )
     })
+}
+
+pub fn find_bin_js(name: &str, root: &Path, cwd: &Path) -> Result<PathBuf> {
+    let path = std::env::var_os("PATH").unwrap_or_default();
+    let paths = cwd
+        .ancestors()
+        .filter(|&path| path.starts_with(root))
+        .map(|path| path.join("node_modules/.bin"))
+        .chain(iter::once(path.into()))
+        .fold(OsString::new(), |mut acc, path| {
+            if !acc.is_empty() {
+                acc.push(":");
+            }
+
+            acc.push(path);
+            acc
+        });
+
+    which::which_in(name, Some(paths), cwd).wrap_err(format!(
+        "missing `{name}` binary, try to install it through your OS package manager and make sure \
+         it's available through the PATH env variable"
+    ))
 }
 
 #[cfg(test)]
