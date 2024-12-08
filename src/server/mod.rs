@@ -69,7 +69,7 @@ async fn run_server(base: PathBuf, port: u16, notifier: watch::Receiver<()>) -> 
 
     tokio::select! {
         r = server => r?,
-        _ = shutdown.handle() => {}
+        () = shutdown.handle() => {}
     }
 
     debug!("server shut down");
@@ -103,7 +103,7 @@ async fn reload_ws(
 async fn ws_notify(mut socket: WebSocket, shutdown: Shutdown, mut reload: watch::Receiver<()>) {
     loop {
         tokio::select! {
-            _ = shutdown.handle() => {
+            () = shutdown.handle() => {
                 return;
             }
             res = reload.changed() => {

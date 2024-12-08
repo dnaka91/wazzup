@@ -36,11 +36,11 @@ pub fn status(project: &Path) -> Result<()> {
             project_file_status(
                 project,
                 ["assets/main.sass", "assets/main.scss", "assets/main.css"],
-            )?,
-            project_file_status(project, [".gitignore"])?,
-            project_file_status(project, ["Cargo.lock"])?,
-            project_file_status(project, ["Cargo.toml"])?,
-            project_file_status(project, ["index.html"])?,
+            ),
+            project_file_status(project, [".gitignore"]),
+            project_file_status(project, ["Cargo.lock"]),
+            project_file_status(project, ["Cargo.toml"]),
+            project_file_status(project, ["index.html"]),
         ],
     );
 
@@ -111,6 +111,7 @@ fn display_pathbuf(v: &Path) -> String {
 }
 
 /// Helper for [`tabled`], to display an [`Option`]<[`PathBuf`]>.
+#[expect(clippy::ref_option)]
 fn display_pathbuf_opt(v: &Option<PathBuf>) -> String {
     match v {
         Some(path) => path.display().to_string(),
@@ -140,10 +141,7 @@ fn tool_status(name: &'static str, find: impl Fn(&'static str) -> Result<PathBuf
 }
 
 /// Determine the status of a file within the current project.
-fn project_file_status<const N: usize>(
-    project: &Path,
-    paths: [&'static str; N],
-) -> Result<ProjectFile> {
+fn project_file_status<const N: usize>(project: &Path, paths: [&'static str; N]) -> ProjectFile {
     let (path, status) = paths
         .iter()
         .find_map(|path| {
@@ -160,7 +158,7 @@ fn project_file_status<const N: usize>(
             |path| (path, FileStatus::Found),
         );
 
-    Ok(ProjectFile { path, status })
+    ProjectFile { path, status }
 }
 
 #[cfg(test)]

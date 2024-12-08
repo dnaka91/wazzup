@@ -45,9 +45,12 @@ fn main() -> Result<()> {
 
     match args.cmd {
         Command::Status => status::status(&std::env::current_dir()?),
-        Command::Build(args) => build(args, false),
-        Command::Dev(args) => dev(args),
-        Command::Completions { shell } => cli::completions(shell),
+        Command::Build(args) => build(&args, false),
+        Command::Dev(args) => dev(&args),
+        Command::Completions { shell } => {
+            cli::completions(shell);
+            Ok(())
+        }
         Command::Manpages { dir } => cli::manpages(&dir),
     }
 }
@@ -124,7 +127,7 @@ fn css_mode(project: &Path) -> Result<CssMode> {
 }
 
 /// Fully build the project from scratch.
-fn build(args: BuildArgs, dev: bool) -> Result<()> {
+fn build(args: &BuildArgs, dev: bool) -> Result<()> {
     let project = std::env::current_dir()?;
     let out = project.join("dist");
 
@@ -149,11 +152,11 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
     match css_mode {
         CssMode::Sass => {
             let sass = Sass::new(cargo.workspace_dir(), &project)?;
-            build::sass(&sass, &project, args.release)?
+            build::sass(&sass, &project, args.release)?;
         }
         CssMode::Tailwind => {
             let tailwind = Tailwind::new(cargo.workspace_dir(), &project)?;
-            build::tailwind(&tailwind, &project, args.release)?
+            build::tailwind(&tailwind, &project, args.release)?;
         }
     }
     info!(mode = %css_mode, "built stylesheets");
@@ -177,13 +180,13 @@ fn build(args: BuildArgs, dev: bool) -> Result<()> {
 }
 
 /// Run a local dev server that hosts the project and rebuilds on file changes.
-fn dev(args: DevArgs) -> Result<()> {
+fn dev(args: &DevArgs) -> Result<()> {
     let project = std::env::current_dir()?;
     let name = package_name(&project)?;
     let css_mode = css_mode(&project)?;
 
     let watcher = watch::watch(project.clone())?;
-    let debouncer = watch::debounce(watcher, Duration::from_secs(2))?;
+    let debouncer = watch::debounce(watcher, Duration::from_secs(2));
     let (shutdown_tx, shutdown_rx) = flume::bounded(0);
     let (reload_tx, reload_rx) = flume::bounded(0);
 
@@ -194,7 +197,7 @@ fn dev(args: DevArgs) -> Result<()> {
         let tailwind = Tailwind::new(cargo.workspace_dir(), &project)?;
 
         move || {
-            if let Err(e) = build(BuildArgs::default(), true) {
+            if let Err(e) = build(&BuildArgs::default(), true) {
                 error!(error = ?e, "failed building");
                 return;
             }
@@ -205,7 +208,7 @@ fn dev(args: DevArgs) -> Result<()> {
             loop {
                 let res = Selector::new()
                     .recv(&shutdown_rx, |_| None)
-                    .recv(debouncer.receiver(), |change| change.ok())
+                    .recv(debouncer.receiver(), Result::ok)
                     .wait();
 
                 if let Some(change) = res {

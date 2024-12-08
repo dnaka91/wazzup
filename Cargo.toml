@@ -12,38 +12,48 @@ authors = ["Dominik Nakamura <dnaka91@gmail.com>"]
 include = ["src/**/*", "CHANGELOG.md", "LICENSE", "README.md"]
 
 [dependencies]
-axum = { version = "0.7.5", features = ["http2", "ws"] }
-cargo-lock = "9.0.0"
-clap = { version = "4.5.4", features = ["derive", "wrap_help"] }
-clap_complete = "4.5.2"
-clap_mangen = "0.2.20"
+axum = { version = "0.7.9", features = ["http2", "ws"] }
+cargo-lock = "10.0.1"
+clap = { version = "4.5.23", features = ["derive", "wrap_help"] }
+clap_complete = "4.5.38"
+clap_mangen = "0.2.24"
 color-eyre = { version = "0.6.3", default-features = false }
 directories = "5.0.1"
-flume = "0.11.0"
-ignore = "0.4.22"
+flume = "0.11.1"
+ignore = "0.4.23"
 minify-html = "0.15.0"
 minify-js = "0.6.0"
-notify = "6.1.1"
-once_cell = "1.19.0"
-semver = "1.0.22"
-serde = { version = "1.0.198", features = ["derive"] }
-serde_json = "1.0.116"
+notify = "7.0.0"
+once_cell = "1.20.2"
+semver = "1.0.23"
+serde = { version = "1.0.215", features = ["derive"] }
+serde_json = "1.0.133"
 serde_path_to_error = "0.1.16"
-tabled = { version = "0.15.0", features = ["ansi", "derive"] }
-tempfile = "3.10.1"
-tokio = { version = "1.37.0", features = ["macros", "rt", "sync"] }
-tokio-shutdown = "0.1.4"
-toml = "0.8.12"
-tower-http = { version = "0.5.2", features = ["fs"] }
-tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
-which = "6.0.1"
+tabled = { version = "0.17.0", features = ["ansi", "derive"] }
+tempfile = "3.14.0"
+tokio = { version = "1.42.0", features = ["macros", "rt", "sync"] }
+tokio-shutdown = "0.1.5"
+toml = "0.8.19"
+tower-http = { version = "0.6.2", features = ["fs"] }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"
+which = "7.0.0"
 yansi = "1.0.1"
 
 [dev-dependencies]
-assert_fs = "1.1.1"
+assert_fs = "1.1.2"
 indoc = "2.0.5"
 
 [profile.release]
 lto = "thin"
 strip = true
+
+[lints.rust]
+rust_2018_idioms = { level = "deny", priority = -1 }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)'] }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"

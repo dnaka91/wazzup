@@ -104,14 +104,13 @@ impl Default for DevArgs {
 }
 
 /// Generate shell completions, written to the standard output.
-pub fn completions(shell: Shell) -> Result<()> {
+pub fn completions(shell: Shell) {
     clap_complete::generate(
         shell,
         &mut Cli::command(),
         env!("CARGO_PKG_NAME"),
         &mut io::stdout().lock(),
     );
-    Ok(())
 }
 
 /// Generate man pages in the target directory. The directory must already exist and none of the

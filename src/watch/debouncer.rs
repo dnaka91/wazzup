@@ -14,7 +14,6 @@ use std::{
     time::{Duration, Instant},
 };
 
-use color_eyre::eyre::Result;
 use flume::Selector;
 use tracing::{debug, trace};
 
@@ -45,7 +44,7 @@ impl Handle {
     }
 }
 
-pub fn debounce(watcher: watcher::Handle, debounce: Duration) -> Result<Handle> {
+pub fn debounce(watcher: watcher::Handle, debounce: Duration) -> Handle {
     let (change_tx, change_rx) = flume::bounded(super::CHANNEL_SIZE);
     let (shutdown_tx, shutdown_rx) = flume::bounded(0);
 
@@ -61,7 +60,7 @@ pub fn debounce(watcher: watcher::Handle, debounce: Duration) -> Result<Handle> 
         loop {
             let res = Selector::new()
                 .recv(&debouncer.shutdown, |_| None)
-                .recv(debouncer.handle.receiver(), |change| change.ok())
+                .recv(debouncer.handle.receiver(), Result::ok)
                 .wait_timeout(Duration::from_millis(500));
 
             match res {
@@ -94,9 +93,9 @@ pub fn debounce(watcher: watcher::Handle, debounce: Duration) -> Result<Handle> 
         debouncer.handle
     });
 
-    Ok(Handle {
+    Handle {
         shutdown: shutdown_tx,
         thread: task,
         receiver: change_rx,
-    })
+    }
 }

@@ -28,7 +28,7 @@ impl Rustup {
 
         BIN_PATH
             .get_or_try_init(|| find_bin("rustup"))
-            .map(|path| path.as_path())
+            .map(PathBuf::as_path)
     }
 
     pub fn check_wasm_target() -> Result<bool> {
@@ -82,7 +82,7 @@ impl Cargo {
 
         BIN_PATH
             .get_or_try_init(|| find_bin("cargo"))
-            .map(|path| path.as_path())
+            .map(PathBuf::as_path)
     }
 
     /// Create a new instance for the given project. This will directly locate the workspace root
@@ -282,7 +282,7 @@ impl WasmOpt {
 
         BIN_PATH
             .get_or_try_init(|| find_bin("wasm-opt"))
-            .map(|path| path.as_path())
+            .map(PathBuf::as_path)
     }
 
     pub fn run(target: &Path) -> Result<()> {

@@ -247,7 +247,7 @@ pub fn watch(project: PathBuf) -> Result<Handle> {
     let task = thread::spawn(move || {
         while let Some(ev) = Selector::new()
             .recv(&watcher.shutdown, |_| None)
-            .recv(&watcher.notify_rx, |ev| ev.ok())
+            .recv(&watcher.notify_rx, Result::ok)
             .wait()
         {
             watcher.handle_event(ev);

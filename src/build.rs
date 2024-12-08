@@ -221,7 +221,7 @@ pub fn asset(project: &Path, asset: &Path) -> Result<()> {
         Ok(())
     } else {
         match fs::remove_dir_all(dist_path) {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) if e.kind() == ErrorKind::NotFound => Ok(()),
             Err(e) => Err(e.into()),
         }
@@ -238,7 +238,7 @@ mod tests {
 
     use crate::tools::Sass;
 
-    const INDEX_HTML: &str = indoc! {r#"
+    const INDEX_HTML: &str = indoc! {r"
         <!DOCTYPE html>
         <html>
           <head>
@@ -248,7 +248,7 @@ mod tests {
             <!--WAZZUP-BODY-->
           </body>
         </html>
-    "#};
+    "};
 
     #[test]
     fn build_index_debug() -> Result<()> {

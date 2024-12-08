@@ -11,7 +11,7 @@
 //!   - assets/* (excluding SASS/SCSS/CSS files)
 //! - Rust
 //!   - Any remaining files, due to the fact that other files might be:
-//!     - Included with include_bytes!, include_str! or other macros
+//!     - Included with [`include_bytes!`], [`include_str!`] or other macros
 //!     - Processed through proc macros and turned into Rust code (for example Protobuf schemas)
 
 mod debouncer;

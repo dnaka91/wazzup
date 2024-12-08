@@ -4,41 +4,39 @@ targets = [
 ]
 
 [advisories]
-version = 2
+ignore = ["RUSTSEC-2024-0384"]
 
 [licenses]
-version = 2
 allow = [
     "Apache-2.0",
-	"BSD-3-Clause",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
     "CC0-1.0",
     "ISC",
     "MIT",
     "MPL-2.0",
+    "Unicode-3.0",
     "Zlib",
 ]
 exceptions = [
     { allow = ["AGPL-3.0"], name = "wazzup" },
-    { allow = ["Unicode-DFS-2016"], name = "unicode-ident" },
 ]
 
 [bans]
 skip = [
-    { name = "ahash", version = "0.7" },
-    { name = "aho-corasick", version = "0.7" },
-    { name = "bitflags", version = "1" },
-    { name = "hashbrown", version = "<0.14" },
-    { name = "heck", version = "0.5" },
-    { name = "itertools", version = "0.10" },
-    { name = "minify-js", version = "0.5" },
-    { name = "parse-js", version = "0.17" },
-    { name = "syn", version = "1" },
-    { name = "sync_wrapper", version = "0.1" },
-    { name = "toml_edit", version = "0.19" },
-    { name = "toml", version = "0.7" },
-    { name = "winnow", version = "0.5" },
+    "ahash@0.7",
+    "aho-corasick@0.7",
+    "bitflags@1",
+    "hashbrown@<0.12",
+    "hashbrown@<0.13",
+    "hashbrown@<0.14",
+    "heck@0.4",
+    "itertools@0.10",
+    "minify-js@0.5",
+    "parse-js@0.17",
+    "rustc-hash@1",
+    "syn@1",
+    "sync_wrapper@0.1",
 ]
 skip-tree = [
-    { name = "phf_codegen", version = "0.10", depth = 2 },
-    { name = "phf", version = "0.10", depth = 2 },
 ]
