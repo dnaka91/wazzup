@@ -44,10 +44,6 @@ yansi = "1.0.1"
 assert_fs = "1.1.2"
 indoc = "2.0.5"
 
-[profile.release]
-lto = "thin"
-strip = true
-
 [lints.rust]
 rust_2018_idioms = { level = "deny", priority = -1 }
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage)'] }
@@ -57,3 +53,7 @@ all = { level = "deny", priority = -1 }
 pedantic = { level = "deny", priority = -1 }
 cast_possible_truncation = "allow"
 cast_precision_loss = "allow"
+
+[profile.release]
+lto = "thin"
+strip = true
