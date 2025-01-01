@@ -112,7 +112,7 @@ async fn ws_notify(mut socket: WebSocket, shutdown: Shutdown, mut reload: watch:
                     return;
                 }
 
-                let msg = Message::Text("reload".to_owned());
+                let msg = Message::text("reload");
 
                 // ensure we don't wait too long, so we don't miss out on any shutdown signal
                 if time::timeout(Duration::from_secs(1), socket.send(msg)).await.is_err() {
